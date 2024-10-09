@@ -4,7 +4,7 @@ const conn = mariadb.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'root',
-    database: 'Bookshop',
+    database: 'BookShop',
     dateStrings: true
 });
 
