@@ -6,7 +6,8 @@ const allBooks = (req, res) => {
 
     let offset = limit * (currentPage - 1);
 
-    let sql = 'SELECT * FROM books';
+    let sql = `SELECT *, 
+                    (SELECT count(*) FROM likes WHERE books.id = liked_book_id) AS likes FROM books`;
     let values = [];
     if (category_id && isNew) {
         sql += ' WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()';
@@ -39,11 +40,16 @@ const allBooks = (req, res) => {
 }
 const bookDetail = (req, res) => {
     let { id } = req.params;
+    let { user_id } = req.body;
 
     id = parseInt(id);
-    let sql = `SELECT * FROM books LEFT JOIN category
-        ON books.category_id = category.id WHERE books.id = ?`;
-    conn.query(sql, id,
+    let sql = `SELECT books.*, category.name,
+                    (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes,
+                    (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS liked
+                    FROM books LEFT JOIN category
+                    ON books.category_id = category.id WHERE books.id = ?`;
+    let values = [user_id, id, id];
+    conn.query(sql, values,
         (error, results) => {
         if (error) {
             console.log(error);
