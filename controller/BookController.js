@@ -2,20 +2,24 @@ const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
 const allBooks = (req, res) => {
-    let { category_id, isNew } = req.query;
+    let { category_id, isNew, limit, currentPage } = req.query;
 
-    let sql = 'SELECT * FROM books ';
+    let offset = limit * (currentPage - 1);
+
+    let sql = 'SELECT * FROM books';
     let values = [];
     if (category_id && isNew) {
-        sql += 'WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()';
-        values = [category_id, isNew];
+        sql += ' WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()';
+        values = [category_id];
     } else if (category_id) {
-        sql += 'WHERE category_id = ?';
-        values = category_id;
+        sql += ' WHERE category_id = ?';
+        values = [category_id];
     } else if (isNew) {
-        sql += 'WHERE pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()';
-        values = isNew;
+        sql += ' WHERE pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()';
     }
+
+    sql += ' LIMIT ? OFFSET ?';
+    values.push(parseInt(limit), offset);
 
     // 카테고리별 도서 목록 조회
     conn.query(sql, values,
