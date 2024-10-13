@@ -7,10 +7,7 @@ const router = express.Router();
 
 router.use(express.json());
 
-// 전체 도서 조회
-router.get('/', allBooks);
-
-// 개별 도서 조회
-router.get('/:id', bookDetail);
+router.get('/', allBooks); // 전체 도서 조회
+router.get('/:id', bookDetail); // 개별 도서 조회
 
 module.exports = router;

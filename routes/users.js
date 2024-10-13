@@ -9,16 +9,9 @@ const {
 
 router.use(express.json());
 
-// 회원가입
-router.post("/join", join);
-
-// 로그인
-router.post("/login", login);
-
-// 패스워드 초기화 요청
-router.post("/reset", passwordResetRequest);
-
-// 패스워드 초기화
-router.put("/reset", passwordReset);
+router.post("/join", join); // 회원가입
+router.post("/login", login); // 로그인
+router.post("/reset", passwordResetRequest); // 패스워드 초기화 요청
+router.put("/reset", passwordReset); // 패스워드 초기화
 
 module.exports = router;
