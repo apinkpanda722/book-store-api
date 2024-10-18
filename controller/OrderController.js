@@ -50,11 +50,37 @@ const deleteCartItems = async (conn, items) => {
 }
 
 const getOrders = (req, res) => {
-    res.json("주문 목록 조회");
+    let sql = `SELECT orders.id, created_at, address, receiver, contact,
+                        book_title, total_num, total_price,
+                        FROM orders LEFT JOIN delivery
+                        ON orders.delivery_id = delivery.id`
+    conn.query(sql,
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                return res.status(StatusCodes.BAD_REQUEST).end();
+            }
+
+            return res.status(StatusCodes.OK).json(results);
+        })
 }
 
 const getOrderDetail = (req, res) => {
-    res.json("주문 상세 상품 조회");
+    const { id } = req.params;
+
+    let sql = `SELECT book_id, title, author, price, num
+                        FROM orderedBook LEFT JOIN books
+                        ON orderedBook.book_id = books.id
+                        WHERE order_id = ?`
+    conn.query(sql, id,
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                return res.status(StatusCodes.BAD_REQUEST).end();
+            }
+
+            return res.status(StatusCodes.OK).json(results);
+        })
 }
 
 module.exports = {
