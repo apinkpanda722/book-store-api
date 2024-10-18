@@ -24,15 +24,29 @@ const order = async (req, res) => {
     [results] = await conn.execute(sql, values);
     let order_id = results.insertId;
 
+    sql = `SELECT book_id, num FROM cartItems WHERE id IN (?)`;
+    // conn.execute나 conn.query와는 상관없이 INSERT문이 아닌 SELECT 문이라 반환형태가 다르다.
+    let [orderItems, fields] = await conn.query(sql, [items]);
+
     sql = `INSERT INTO orderedBook (order_id, book_id, num) 
             VALUES ?`;
+
+    // items.. 배열 : 요소들을 하나씩 꺼내서 (foreach문 돌려서) >
     values = [];
-    items.forEach((item) => {
+    orderItems.forEach((item) => {
         values.push([order_id, item.book_id, item.num])
     })
     results = await conn.query(sql, [values]);
 
-    return res.status(StatusCodes.OK).json(results[0]);
+    let result  = await deleteCartItems(conn, items);
+
+    return res.status(StatusCodes.OK).json(result);
+}
+
+const deleteCartItems = async (conn, items) => {
+    let sql = `DELETE FROM cartItems WHERE id IN (?)`;
+    let result = await conn.query(sql, [items]);
+    return result;
 }
 
 const getOrders = (req, res) => {
