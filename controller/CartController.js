@@ -1,3 +1,4 @@
+const decodeJwt = require("../auth");
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 const jwt = require("jsonwebtoken");
@@ -5,7 +6,17 @@ const jwt = require("jsonwebtoken");
 const addToCart = (req, res) => {
     let { book_id, num } = req.body;
 
-    let authorization = decodeJwt(req);
+    let authorization = decodeJwt(req, res);
+
+    if (authorization instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+            "message" : "로그인 세션이 만료되었습니다. 다시 로그인하세요."
+        });
+    } else if (authorization instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            "message" : "잘못된 토큰입니다."
+        });
+    }
 
     let sql = `INSERT INTO cartItems (book_id, num, user_id) VALUES (?, ?, ?)`;
     let values = [book_id, num, authorization.id];
@@ -23,7 +34,17 @@ const addToCart = (req, res) => {
 const getCartItems = (req, res) => {
     let { selected } = req.body;
 
-    let authorization = decodeJwt(req);
+    let authorization = decodeJwt(req, res);
+
+    if (authorization instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+            "message" : "로그인 세션이 만료되었습니다. 다시 로그인하세요."
+        });
+    } else if (authorization instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            "message" : "잘못된 토큰입니다."
+        });
+    }
 
     let sql = `SELECT cartItems.id, book_id, title, summary, num, price
                     FROM cartItems LEFT JOIN books
@@ -56,13 +77,6 @@ const removeCartItem = (req, res) => {
             return res.status(StatusCodes.OK).json(results);
         })
 }
-
-function decodeJwt (req) {
-    let token = req.headers["authorization"];
-    let decodedJwt = jwt.verify(token, process.env.PRIVATE_KEY);
-    return decodedJwt;
-}
-
 
 module.exports = {
     addToCart,
