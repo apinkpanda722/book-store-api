@@ -4,11 +4,12 @@ const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
 const allBooks = (req, res) => {
+    let allBooksRes = {};
     let { category_id, isNew, limit, currentPage } = req.query;
 
     let offset = limit * (currentPage - 1);
 
-    let sql = `SELECT *, 
+    let sql = `SELECT SQL_CALC_FOUND_ROWS *, 
                     (SELECT count(*) FROM likes WHERE books.id = liked_book_id) AS likes FROM books`;
     let values = [];
     if (category_id && isNew) {
@@ -29,13 +30,32 @@ const allBooks = (req, res) => {
         (error, results) => {
             if (error) {
                 console.log(error);
-                return res.status(StatusCodes.BAD_REQUEST).end();
+                // return res.status(StatusCodes.BAD_REQUEST).end();
             }
 
             if (results.length)
-                return res.status(StatusCodes.OK).json(results);
+                allBooksRes.books = results;
             else
                 return res.status(StatusCodes.NOT_FOUND).end();
+        }
+    )
+
+    sql = 'SELECT found_rows()';
+    // 카테고리별 도서 목록 조회
+    conn.query(sql,
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                return res.status(StatusCodes.BAD_REQUEST).end();
+            }
+
+            let pagination = {};
+            pagination.current_page = parseInt(currentPage);
+            pagination.totalCount = results[0]["found_rows()"];
+
+            allBooksRes.pagination= pagination;
+
+            return res.status(StatusCodes.OK).json(allBooksRes);
         }
     )
 
@@ -81,52 +101,8 @@ const bookDetail = (req, res) => {
                 return res.status(StatusCodes.OK).json(results[0]);
             else
                 return res.status(StatusCodes.NOT_FOUND).end();
-        })
-    // } else if (authorization instanceof ReferenceError) {
-    //     book_id = req.params.id;
-    //
-    //     book_id = parseInt(book_id);
-    //     sql = `SELECT books.*, category.name,
-    //                 (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes
-    //                 FROM books LEFT JOIN category
-    //                 ON books.category_id = category.id WHERE books.id = ?`;
-    //     values = [book_id];
-    //     conn.query(sql, values,
-    //         (error, results) => {
-    //             if (error) {
-    //                 console.log(error);
-    //                 return res.status(StatusCodes.INTERNAL_SERVER_ERROR).end();
-    //             }
-    //
-    //             if (results[0])
-    //                 return res.status(StatusCodes.OK).json(results[0]);
-    //             else
-    //                 return res.status(StatusCodes.NOT_FOUND).end();
-    //         })
-    // } else {
-    //     book_id = req.params.id;
-    //
-    //     book_id = parseInt(book_id);
-    //     sql = `SELECT books.*, category.name,
-    //                 (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes,
-    //                 (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS liked
-    //                 FROM books LEFT JOIN category
-    //                 ON books.category_id = category.id WHERE books.id = ?`;
-    //     values = [authorization.id, book_id, book_id];
-    //     conn.query(sql, values,
-    //         (error, results) => {
-    //             if (error) {
-    //                 console.log(error);
-    //                 return res.status(StatusCodes.INTERNAL_SERVER_ERROR).end();
-    //             }
-    //
-    //             if (results[0])
-    //                 return res.status(StatusCodes.OK).json(results[0]);
-    //             else
-    //                 return res.status(StatusCodes.NOT_FOUND).end();
-    //         })
-    // }
-
+        }
+    )
 }
 
 module.exports = {
