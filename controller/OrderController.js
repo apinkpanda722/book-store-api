@@ -77,10 +77,11 @@ const getOrders = (req, res) => {
     }
 
     let sql = `SELECT orders.id, created_at, address, receiver, contact,
-                        book_title, total_num, total_price,
+                        book_title, total_num, total_price
                         FROM orders LEFT JOIN delivery
-                        ON orders.delivery_id = delivery.id`
-    conn.query(sql,
+                        ON orders.delivery_id = delivery.id
+                        WHERE orders.user_id = ?`
+    conn.query(sql, authorization.id,
         (error, results) => {
             if (error) {
                 console.log(error);
