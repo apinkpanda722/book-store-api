@@ -1,3 +1,5 @@
+const decodeJwt = require("../auth");
+const jwt = require("jsonwebtoken");
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
@@ -39,16 +41,28 @@ const allBooks = (req, res) => {
 
 }
 const bookDetail = (req, res) => {
-    let { id } = req.params;
-    let { user_id } = req.body;
 
-    id = parseInt(id);
+    let authorization = decodeJwt(req, res);
+
+    if (authorization instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+            "message" : "로그인 세션이 만료되었습니다. 다시 로그인하세요."
+        });
+    } else if (authorization instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            "message" : "잘못된 토큰입니다."
+        });
+    }
+
+    let book_id = req.params.id;
+
+    book_id = parseInt(book_id);
     let sql = `SELECT books.*, category.name,
                     (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes,
                     (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS liked
                     FROM books LEFT JOIN category
                     ON books.category_id = category.id WHERE books.id = ?`;
-    let values = [user_id, id, id];
+    let values = [authorization.id, book_id, book_id];
     conn.query(sql, values,
         (error, results) => {
         if (error) {

@@ -1,3 +1,5 @@
+const decodeJwt = require("../auth");
+const jwt = require("jsonwebtoken");
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 const mariadb = require("mysql2/promise");
@@ -11,7 +13,19 @@ const order = async (req, res) => {
         dateStrings: true
     });
 
-    let { items, delivery, totalNum, totalPrice, userId, firstBookTitle } = req.body;
+    let authorization = decodeJwt(req, res);
+
+    if (authorization instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+            "message" : "로그인 세션이 만료되었습니다. 다시 로그인하세요."
+        });
+    } else if (authorization instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            "message" : "잘못된 토큰입니다."
+        });
+    }
+
+    let { items, delivery, totalNum, totalPrice, firstBookTitle } = req.body;
 
     let sql = `INSERT INTO delivery (address, receiver, contact) VALUES (?, ?, ?)`;
     let values = [delivery.address, delivery.receiver, delivery.contact];
@@ -20,7 +34,7 @@ const order = async (req, res) => {
     let delivery_id = results.insertId;
 
     sql = `INSERT INTO orders (book_title, total_num, total_price, user_id, delivery_id) VALUES (?, ?, ?, ?, ?)`;
-    values = [firstBookTitle, totalNum, totalPrice, userId, delivery_id];
+    values = [firstBookTitle, totalNum, totalPrice, authorization.id, delivery_id];
     [results] = await conn.execute(sql, values);
     let order_id = results.insertId;
 
@@ -66,13 +80,13 @@ const getOrders = (req, res) => {
 }
 
 const getOrderDetail = (req, res) => {
-    const { id } = req.params;
+    const orderId = req.params.id;
 
     let sql = `SELECT book_id, title, author, price, num
                         FROM orderedBook LEFT JOIN books
                         ON orderedBook.book_id = books.id
                         WHERE order_id = ?`
-    conn.query(sql, id,
+    conn.query(sql, orderId,
         (error, results) => {
             if (error) {
                 console.log(error);
