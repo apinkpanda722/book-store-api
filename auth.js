@@ -5,8 +5,13 @@ dotenv.config();
 const decodeJwt = (req, res) => {
     try {
         let token = req.headers["authorization"];
-        let decodedJwt = jwt.verify(token, process.env.PRIVATE_KEY);
-        return decodedJwt;
+
+        if (token) {
+            let decodedJwt = jwt.verify(token, process.env.PRIVATE_KEY);
+            return decodedJwt;
+        } else {
+            throw new ReferenceError("jwt must be provided");
+        }
     } catch (err) {
         console.log(err.name);
         console.log(err.message);

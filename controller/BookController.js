@@ -50,31 +50,82 @@ const bookDetail = (req, res) => {
         });
     } else if (authorization instanceof jwt.JsonWebTokenError) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            "message" : "잘못된 토큰입니다."
+            "message": "잘못된 토큰입니다."
         });
     }
 
     let book_id = req.params.id;
-
     book_id = parseInt(book_id);
+    let values = [book_id];
     let sql = `SELECT books.*, category.name,
-                    (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes,
-                    (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS liked
+                        (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes`;
+
+    if (authorization instanceof ReferenceError) {
+        sql += ` FROM books LEFT JOIN category
+                    ON books.category_id = category.id WHERE books.id = ?`;
+    } else {
+        sql += `, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS liked 
                     FROM books LEFT JOIN category
                     ON books.category_id = category.id WHERE books.id = ?`;
-    let values = [authorization.id, book_id, book_id];
+        values = [authorization.id, book_id, book_id];
+    }
+
     conn.query(sql, values,
         (error, results) => {
-        if (error) {
-            console.log(error);
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).end();
-        }
+            if (error) {
+                console.log(error);
+                return res.status(StatusCodes.INTERNAL_SERVER_ERROR).end();
+            }
 
-        if (results[0])
-            return res.status(StatusCodes.OK).json(results[0]);
-        else
-            return res.status(StatusCodes.NOT_FOUND).end();
-    })
+            if (results[0])
+                return res.status(StatusCodes.OK).json(results[0]);
+            else
+                return res.status(StatusCodes.NOT_FOUND).end();
+        })
+    // } else if (authorization instanceof ReferenceError) {
+    //     book_id = req.params.id;
+    //
+    //     book_id = parseInt(book_id);
+    //     sql = `SELECT books.*, category.name,
+    //                 (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes
+    //                 FROM books LEFT JOIN category
+    //                 ON books.category_id = category.id WHERE books.id = ?`;
+    //     values = [book_id];
+    //     conn.query(sql, values,
+    //         (error, results) => {
+    //             if (error) {
+    //                 console.log(error);
+    //                 return res.status(StatusCodes.INTERNAL_SERVER_ERROR).end();
+    //             }
+    //
+    //             if (results[0])
+    //                 return res.status(StatusCodes.OK).json(results[0]);
+    //             else
+    //                 return res.status(StatusCodes.NOT_FOUND).end();
+    //         })
+    // } else {
+    //     book_id = req.params.id;
+    //
+    //     book_id = parseInt(book_id);
+    //     sql = `SELECT books.*, category.name,
+    //                 (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes,
+    //                 (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS liked
+    //                 FROM books LEFT JOIN category
+    //                 ON books.category_id = category.id WHERE books.id = ?`;
+    //     values = [authorization.id, book_id, book_id];
+    //     conn.query(sql, values,
+    //         (error, results) => {
+    //             if (error) {
+    //                 console.log(error);
+    //                 return res.status(StatusCodes.INTERNAL_SERVER_ERROR).end();
+    //             }
+    //
+    //             if (results[0])
+    //                 return res.status(StatusCodes.OK).json(results[0]);
+    //             else
+    //                 return res.status(StatusCodes.NOT_FOUND).end();
+    //         })
+    // }
 
 }
 
