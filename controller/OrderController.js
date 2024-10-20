@@ -64,6 +64,18 @@ const deleteCartItems = async (conn, items) => {
 }
 
 const getOrders = (req, res) => {
+    let authorization = decodeJwt(req, res);
+
+    if (authorization instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+            "message" : "로그인 세션이 만료되었습니다. 다시 로그인하세요."
+        });
+    } else if (authorization instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            "message" : "잘못된 토큰입니다."
+        });
+    }
+
     let sql = `SELECT orders.id, created_at, address, receiver, contact,
                         book_title, total_num, total_price,
                         FROM orders LEFT JOIN delivery
@@ -80,6 +92,18 @@ const getOrders = (req, res) => {
 }
 
 const getOrderDetail = (req, res) => {
+    let authorization = decodeJwt(req, res);
+
+    if (authorization instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+            "message" : "로그인 세션이 만료되었습니다. 다시 로그인하세요."
+        });
+    } else if (authorization instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            "message" : "잘못된 토큰입니다."
+        });
+    }
+
     const orderId = req.params.id;
 
     let sql = `SELECT book_id, title, author, price, num
