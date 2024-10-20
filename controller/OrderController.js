@@ -52,7 +52,7 @@ const order = async (req, res) => {
     })
     results = await conn.query(sql, [values]);
 
-    let result  = await deleteCartItems(conn, items);
+    let result = await deleteCartItems(conn, items);
 
     return res.status(StatusCodes.OK).json(result);
 }
@@ -88,6 +88,18 @@ const getOrders = (req, res) => {
                 return res.status(StatusCodes.BAD_REQUEST).end();
             }
 
+            results.map(function (result) {
+                result.createdAt = result.created_at;
+                result.bookTitle = result.book_title;
+                result.totalNum = result.total_num;
+                result.totalPrice = result.total_price;
+
+                delete result.created_at;
+                delete result.book_title;
+                delete result.total_num;
+                delete result.total_price;
+            })
+
             return res.status(StatusCodes.OK).json(results);
         })
 }
@@ -118,6 +130,10 @@ const getOrderDetail = (req, res) => {
                 return res.status(StatusCodes.BAD_REQUEST).end();
             }
 
+            results.map(function (result) {
+                result.bookId = result.book_id;
+                delete result.book_id;
+            })
             return res.status(StatusCodes.OK).json(results);
         })
 }

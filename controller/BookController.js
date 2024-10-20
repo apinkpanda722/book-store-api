@@ -33,9 +33,15 @@ const allBooks = (req, res) => {
                 // return res.status(StatusCodes.BAD_REQUEST).end();
             }
 
-            if (results.length)
+            if (results.length) {
+                results.map(function (result) {
+                    result.categoryId = result.category_id;
+                    result.pubDate = result.pub_date;
+                    delete result.pub_date;
+                    delete result.category_id;
+                })
                 allBooksRes.books = results;
-            else
+            } else
                 return res.status(StatusCodes.NOT_FOUND).end();
         }
     )
@@ -97,9 +103,13 @@ const bookDetail = (req, res) => {
                 return res.status(StatusCodes.INTERNAL_SERVER_ERROR).end();
             }
 
-            if (results[0])
+            if (results[0]) {
+                results[0].categoryId = results[0].category_id;
+                results[0].pubDate = results[0].pub_date;
+                delete results[0].pub_date;
+                delete results[0].category_id;
                 return res.status(StatusCodes.OK).json(results[0]);
-            else
+            } else
                 return res.status(StatusCodes.NOT_FOUND).end();
         }
     )
