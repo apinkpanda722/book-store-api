@@ -1,5 +1,16 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
+
+const whitelist = ['http://localhost:3000']
+
+const corsOptions = {
+    origin: whitelist,
+    credentials: true,
+    optionsSuccessStatus: 200,
+}
+
+app.use(cors(corsOptions));
 
 const dotenv = require('dotenv');
 dotenv.config();
