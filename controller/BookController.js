@@ -56,7 +56,7 @@ const allBooks = (req, res) => {
             }
 
             let pagination = {};
-            pagination.current_page = parseInt(currentPage);
+            pagination.currentPage = parseInt(currentPage);
             pagination.totalCount = results[0]["found_rows()"];
 
             allBooksRes.pagination= pagination;
