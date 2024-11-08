@@ -30,38 +30,38 @@ const allBooks = (req, res) => {
         (error, results) => {
             if (error) {
                 console.log(error);
-                // return res.status(StatusCodes.BAD_REQUEST).end();
-            }
-
-            if (results.length) {
-                results.map(function (result) {
-                    result.categoryId = result.category_id;
-                    result.pubDate = result.pub_date;
-                    delete result.pub_date;
-                    delete result.category_id;
-                })
-                allBooksRes.books = results;
-            } else
-                return res.status(StatusCodes.NOT_FOUND).end();
-        }
-    )
-
-    sql = 'SELECT found_rows()';
-    // 카테고리별 도서 목록 조회
-    conn.query(sql,
-        (error, results) => {
-            if (error) {
-                console.log(error);
                 return res.status(StatusCodes.BAD_REQUEST).end();
             }
 
-            let pagination = {};
-            pagination.currentPage = parseInt(currentPage);
-            pagination.totalCount = results[0]["found_rows()"];
+            if (!results.length) {
+                return res.status(StatusCodes.NOT_FOUND).end();
+            }
 
-            allBooksRes.pagination= pagination;
+            results.map(function (result) {
+                result.categoryId = result.category_id;
+                result.pubDate = result.pub_date;
+                delete result.pub_date;
+                delete result.category_id;
+            });
+            allBooksRes.books = results;
 
-            return res.status(StatusCodes.OK).json(allBooksRes);
+            sql = 'SELECT found_rows()';
+            // 카테고리별 도서 목록 조회
+            conn.query(sql,
+                (error, results) => {
+                    if (error) {
+                        console.log(error);
+                        return res.status(StatusCodes.BAD_REQUEST).end();
+                    }
+
+                    let pagination = {};
+                    pagination.currentPage = parseInt(currentPage);
+                    pagination.totalCount = results[0]["found_rows()"];
+
+                    allBooksRes.pagination= pagination;
+                    return res.status(StatusCodes.OK).json(allBooksRes);
+                }
+            )
         }
     )
 
