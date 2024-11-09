@@ -91,7 +91,7 @@ const getOrders = (req, res) => {
             results.map(function (result) {
                 result.createdAt = result.created_at;
                 result.bookTitle = result.book_title;
-                result.totalNum = result.total_num;
+                result.totalQuantity = result.total_num;
                 result.totalPrice = result.total_price;
 
                 delete result.created_at;
