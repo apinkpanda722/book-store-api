@@ -25,7 +25,7 @@ const order = async (req, res) => {
         });
     }
 
-    let { items, delivery, totalNum, totalPrice, firstBookTitle } = req.body;
+    let { items, delivery, totalQuantity, totalPrice, firstBookTitle } = req.body;
 
     let sql = `INSERT INTO delivery (address, receiver, contact) VALUES (?, ?, ?)`;
     let values = [delivery.address, delivery.receiver, delivery.contact];
@@ -34,7 +34,7 @@ const order = async (req, res) => {
     let delivery_id = results.insertId;
 
     sql = `INSERT INTO orders (book_title, total_num, total_price, user_id, delivery_id) VALUES (?, ?, ?, ?, ?)`;
-    values = [firstBookTitle, totalNum, totalPrice, authorization.id, delivery_id];
+    values = [firstBookTitle, totalQuantity, totalPrice, authorization.id, delivery_id];
     [results] = await conn.execute(sql, values);
     let order_id = results.insertId;
 
